@@ -1,0 +1,1 @@
+# Containerize_Secure_Scale_RAG_Application_With_Qdrant_and_OpenAI_API
