@@ -1,0 +1,13 @@
+flask 
+flask-restx 
+flask-jwt-extended 
+ldap3 
+qdrant-client 
+llama-index-core 
+llama-index-vector-stores-qdrant 
+llama-index-embeddings-langchain 
+llama-index-llms-openai 
+langchain-openai 
+langchain-core 
+openai 
+pydantic

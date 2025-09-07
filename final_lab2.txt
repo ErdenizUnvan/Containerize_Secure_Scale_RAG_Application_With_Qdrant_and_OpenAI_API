@@ -1,0 +1,216 @@
+
+
+/home/kc klasorunde nginx-ssl klasoru olustur ve icinde certificate.pem ve privatekey.pem olsun
+
+mkdir nginx-ssl
+
+cd nginx-ssl
+
+
+wget http://ilkerkayagunes.com/knowledgeclub/certificate.pem
+
+
+
+wget http://ilkerkayagunes.com/knowledgeclub/privatekey.pem
+
+cd ..
+
+
+home/kc/ icinde lb olustur ve lb icinde nginx.conf var:
+
+mkdir lb
+
+cd lb
+
+cat > nginx.conf
+
+events {}
+
+http {
+    upstream myapp {
+        server 172.20.0.110:8443;
+        server 172.20.0.111:8443;
+        server 172.20.0.112:8443;
+        server 172.20.0.113:8443;
+    }
+
+    server {
+        listen 8443 ssl;
+
+        server_name localhost;
+
+        ssl_certificate     /etc/nginx/ssl/certificate.pem;
+        ssl_certificate_key /etc/nginx/ssl/privatekey.pem;
+
+        location / {
+            proxy_pass https://myapp;
+            proxy_ssl_verify off;
+            proxy_set_header Host $host;
+        }
+    }
+}
+
+cd ..
+
+
+/home/kc icindeyken project isimli klasor olustur:
+
+mkdir project
+
+cd project
+
+bu kodun adi: chatapi2.py
+
+/home/kc/project klasoru icinde networkapi.py kodu koy
+
+cat > chatapi2.py
+kodu yapistir
+
+cat > requirements.txt
+flask
+flask-restx
+ldap3
+flask_jwt_extended
+qdrant_client
+llama_index
+langchain_openai
+openai
+langchain
+llama-index-vector-stores-qdrant
+llama-index-embeddings-langchain
+pydantic
+langchain_core
+
+
+wget http://ilkerkayagunes.com/knowledgeclub/certificate.pem
+
+
+
+wget http://ilkerkayagunes.com/knowledgeclub/privatekey.pem
+
+
+privatekey.pem ve certificate.pem /home/kc/project klasoru icinde
+
+/home/kc/project klasoru icinde:
+privatekey.pem ve certificate.pem
+requirements.txt
+chatapi.py
+ve Dockerfile var
+
+cat > Dockerfile
+
+FROM python:3.9.23
+WORKDIR /project
+COPY . /project
+RUN pip install --no-cache-dir -r requirements.txt
+EXPOSE 8443
+CMD ["python3.9", "chatapi2.py"]
+
+
+docker build -t app .
+
+cd ..
+
+cat > docker-compose.yml
+
+version: '3.8'
+
+networks:
+  kc_appnet:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
+
+services:
+  app1:
+    image: app
+    container_name: app1
+    networks:
+      kc_appnet:
+        ipv4_address: 172.20.0.110
+    working_dir: /project
+    volumes:
+      - /home/kc/project:/project
+      - /home/kc/logs1:/logs
+    restart: always
+
+  app2:
+    image: app
+    container_name: app2
+    networks:
+      kc_appnet:
+        ipv4_address: 172.20.0.111
+    working_dir: /project
+    volumes:
+      - /home/kc/project:/project
+      - /home/kc/logs2:/logs
+    restart: always
+
+  app3:
+    image: app
+    container_name: app3
+    networks:
+      kc_appnet:
+        ipv4_address: 172.20.0.112
+    working_dir: /project
+    volumes:
+      - /home/kc/project:/project
+      - /home/kc/logs3:/logs
+    restart: always
+
+  app4:
+    image: app
+    container_name: app4
+    networks:
+      kc_appnet:
+        ipv4_address: 172.20.0.113
+    working_dir: /project
+    volumes:
+      - /home/kc/project:/project
+      - /home/kc/logs4:/logs
+    restart: always
+
+  qdrant:
+    image: qdrant/qdrant
+    container_name: qdrant
+    networks:
+      kc_appnet:
+        ipv4_address: 172.20.0.201
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    restart: always
+
+  chatapi-nginx-lb:
+    image: nginx
+    container_name: chatapi-nginx-lb
+    networks:
+      kc_appnet:
+        ipv4_address: 172.20.0.202
+    ports:
+      - "8443:8443"
+    volumes:
+      - /home/kc/lb/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /home/kc/nginx-ssl:/etc/nginx/ssl:ro
+    restart: always
+
+volumes:
+  qdrant_storage:
+
+
+docker compose up -d --build
+
+
+
+Logları Görüntüleme:
+
+
+
+
+docker logs app1
+docker logs app2
+docker logs app3
+docker logs app4
+
+docker compose down
