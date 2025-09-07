@@ -155,7 +155,6 @@ class Register(Resource):
         claims = get_jwt()
         group = claims.get('group')
 
-        apikey='sk-proj-L2MgIQhNcmER3yEpR8u0T3BlbkFJyBQOcjdM8CowLGe3d8U1'
         args=query_parser.parse_args()
         query=args.query
 
@@ -281,4 +280,5 @@ if __name__ =='__main__':
     host='0.0.0.0',
     port=8443,
     ssl_context=('certificate.pem', 'privatekey.pem'))
+
 
