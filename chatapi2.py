@@ -54,9 +54,8 @@ class ResultModel(BaseModel):
     result: Category
 
 apikey=''
-os.environ['OPENAI_API_KEY'] = apikey
 
-intent_model = ChatOpenAI(model="gpt-3.5-turbo", temperature=0)
+intent_model = ChatOpenAI(model="gpt-3.5-turbo", temperature=0, api_key=apikey)
 
 parser = PydanticOutputParser(pydantic_object=ResultModel)
 
@@ -282,3 +281,4 @@ if __name__ =='__main__':
     host='0.0.0.0',
     port=8443,
     ssl_context=('certificate.pem', 'privatekey.pem'))
+
