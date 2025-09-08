@@ -28,3 +28,10 @@ python add.py
 SPCORE1.pdf
 
 once the docker compose file works, use chat.py code to tak with documents and check the logs by executing log.py
+
+If you ask questions about CCNP Service Provider subjects, your question will be searched only through Service Privider collections.
+
+If you ask questions about CCNP DevNet-Network Automation subjects, your question will be searched only through DevNet collections.
+
+If you ask unrelated questions, then your question will be answered as "out of scope".
+
