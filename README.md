@@ -27,4 +27,4 @@ python add.py
 
 SPCORE1.pdf
 
-once the docker compose file works, use chat.py code to tak with documents and check the logs
+once the docker compose file works, use chat.py code to tak with documents and check the logs by executing log.py
