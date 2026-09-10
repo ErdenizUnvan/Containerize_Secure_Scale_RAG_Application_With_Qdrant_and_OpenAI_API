@@ -1,0 +1,266 @@
+Create the `nginx-ssl` directory inside `/home/admin` and make sure it contains `certificate.pem` and `privatekey.pem`.
+
+```bash
+mkdir nginx-ssl
+
+cd nginx-ssl
+
+openssl req -x509 -newkey rsa:4096 -nodes -out certificate.pem -keyout privatekey.pem -days 3650
+```
+
+`privatekey.pem` and `certificate.pem` are located inside the `/home/admin/nginx-ssl` directory.
+
+```bash
+cd ..
+```
+
+Create the `lb` directory inside `/home/admin/`. The `nginx.conf` file is located inside the `lb` directory:
+
+```bash
+mkdir lb
+
+cd lb
+
+cat > nginx.conf
+```
+
+```nginx
+events {}
+
+http {
+    upstream myapp {
+        server 172.20.0.110:8443;
+        server 172.20.0.111:8443;
+        server 172.20.0.112:8443;
+        server 172.20.0.113:8443;
+    }
+
+    server {
+        listen 8443 ssl;
+
+        server_name localhost;
+
+        ssl_certificate     /etc/nginx/ssl/certificate.pem;
+        ssl_certificate_key /etc/nginx/ssl/privatekey.pem;
+
+        location / {
+            proxy_pass https://myapp;
+            proxy_ssl_verify off;
+            proxy_set_header Host $host;
+        }
+    }
+}
+```
+
+```bash
+cd ..
+```
+
+While inside `/home/admin`, create a directory named `project`:
+
+```bash
+mkdir project
+
+cd project
+```
+
+The name of this code is: `chatapi.py`
+
+Place the `chatapi.py` code inside the `/home/admin/project` directory.
+
+```bash
+cat > chatapi.py
+```
+
+Paste the code.
+
+```bash
+cat > requirements.txt
+```
+
+```text
+flask
+flask-restx
+flask-jwt-extended
+ldap3
+qdrant-client
+llama-index-core
+llama-index-vector-stores-qdrant
+llama-index-embeddings-langchain
+llama-index-llms-openai
+llama-index-readers-file
+langchain-core
+langchain-openai
+openai
+pydantic
+python-dotenv
+requests
+pypdf
+```
+
+```bash
+openssl req -x509 -newkey rsa:4096 -nodes -out certificate.pem -keyout privatekey.pem -days 3650
+```
+
+`privatekey.pem` and `certificate.pem` are located inside the `/home/admin/project` directory.
+
+download the pdf files: 
+https://drive.google.com/drive/folders/1ySQRZIYw1tf3R16NX3I7Z_zVlBIHN4CO
+DEVASC.pdf
+NPDESI.pdf
+SPCORE1.pdf
+SPCORE2.pdf
+SPROUTE1.pdf
+SPROUTE2.pdf
+
+The `/home/admin/project` directory contains:
+
+```text
+privatekey.pem
+certificate.pem
+requirements.txt
+chatapi.py
+.env
+DEVASC.pdf
+NPDESI.pdf
+SPCORE1.pdf
+SPCORE2.pdf
+SPROUTE1.pdf
+SPROUTE2.pdf
+Dockerfile
+```
+
+Create the `Dockerfile`:
+
+```bash
+cat > Dockerfile
+```
+
+```dockerfile
+FROM python:3.12.9
+WORKDIR /project
+COPY . /project
+RUN python3 -m pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+EXPOSE 8443
+CMD ["python3.12", "chatapi.py"]
+```
+
+```bash
+docker build -t app .
+
+cd ..
+
+cat > docker-compose.yml
+```
+
+```yaml
+version: '2.2'
+
+networks:
+  appnet:
+    name: appnet
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
+
+services:
+  app1:
+    image: app
+    container_name: app1
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.110
+    working_dir: /project
+    volumes:
+      - /home/admin/project:/project
+      - /home/admin/logs1:/logs
+    restart: always
+
+  app2:
+    image: app
+    container_name: app2
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.111
+    working_dir: /project
+    volumes:
+      - /home/admin/project:/project
+      - /home/admin/logs2:/logs
+    restart: always
+
+  app3:
+    image: app
+    container_name: app3
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.112
+    working_dir: /project
+    volumes:
+      - /home/admin/project:/project
+      - /home/admin/logs3:/logs
+    restart: always
+
+  app4:
+    image: app
+    container_name: app4
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.113
+    working_dir: /project
+    volumes:
+      - /home/admin/project:/project
+      - /home/admin/logs4:/logs
+    restart: always
+
+  qdrant:
+    image: qdrant/qdrant
+    container_name: qdrant
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.201
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    restart: always
+
+  chatapi-nginx-lb:
+    image: nginx
+    container_name: chatapi-nginx-lb
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.202
+    ports:
+      - "8443:8443"
+    volumes:
+      - /home/admin/lb/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /home/admin/nginx-ssl:/etc/nginx/ssl:ro
+    restart: always
+
+volumes:
+  qdrant_storage:
+```
+
+```bash
+docker compose up -d --build
+```
+
+## Viewing Logs
+
+`log.py`
+
+```bash
+python3 log.py
+```
+
+```bash
+docker logs app1
+docker logs app2
+docker logs app3
+docker logs app4
+```
+
+```bash
+docker compose down
+```
