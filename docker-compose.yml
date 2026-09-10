@@ -1,0 +1,81 @@
+version: '2.2'
+
+networks:
+  appnet:
+    name: appnet
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
+
+services:
+  app1:
+    image: app
+    container_name: app1
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.110
+    working_dir: /project
+    volumes:
+      - /home/admin/logs1:/logs
+    restart: always
+
+  app2:
+    image: app
+    container_name: app2
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.111
+    working_dir: /project
+    volumes:
+      - /home/admin/logs2:/logs
+    restart: always
+
+  app3:
+    image: app
+    container_name: app3
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.112
+    working_dir: /project
+    volumes:
+      - /home/admin/logs3:/logs
+    restart: always
+
+  app4:
+    image: app
+    container_name: app4
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.113
+    working_dir: /project
+    volumes:
+      - /home/admin/logs4:/logs
+    restart: always
+
+  qdrant:
+    image: qdrant/qdrant
+    container_name: qdrant
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.201
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    restart: always
+
+  chatapi-nginx-lb:
+    image: nginx
+    container_name: chatapi-nginx-lb
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.202
+    ports:
+      - "8443:8443"
+    volumes:
+      - /home/admin/lb/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /home/admin/nginx-ssl:/etc/nginx/ssl:ro
+    restart: always
+
+volumes:
+  qdrant_storage:

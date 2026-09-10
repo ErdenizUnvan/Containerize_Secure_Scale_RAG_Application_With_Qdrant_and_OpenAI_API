@@ -1,0 +1,223 @@
+
+
+/home/admin klasorunde nginx-ssl klasoru olustur ve icinde certificate.pem ve privatekey.pem olsun
+
+mkdir nginx-ssl
+
+cd nginx-ssl
+
+openssl req -x509 -newkey rsa:4096 -nodes -out certificate.pem -keyout privatekey.pem -days 3650
+
+privatekey.pem ve certificate.pem /home/admin/nginx-ssl klasoru icinde
+
+cd ..
+
+
+home/kc/ icinde lb olustur ve lb icinde nginx.conf var:
+
+mkdir lb
+
+cd lb
+
+cat > nginx.conf
+
+events {}
+
+http {
+    upstream myapp {
+        server 172.20.0.110:8443;
+        server 172.20.0.111:8443;
+        server 172.20.0.112:8443;
+        server 172.20.0.113:8443;
+    }
+
+    server {
+        listen 8443 ssl;
+
+        server_name localhost;
+
+        ssl_certificate     /etc/nginx/ssl/certificate.pem;
+        ssl_certificate_key /etc/nginx/ssl/privatekey.pem;
+
+        location / {
+            proxy_pass https://myapp;
+            proxy_ssl_verify off;
+            proxy_set_header Host $host;
+        }
+    }
+}
+
+cd ..
+
+
+/home/admin icindeyken project isimli klasor olustur:
+
+mkdir project
+
+cd project
+
+bu kodun adi: chatapi.py
+
+/home/admin/project klasoru icinde chatapi.py kodu koy
+
+cat > chatapi.py
+kodu yapistir
+
+cat > requirements.txt
+flask
+flask-restx
+flask_jwt_extended
+ldap3
+python-dotenv
+qdrant-client
+llama-index-core
+llama-index-vector-stores-qdrant
+llama-index-embeddings-langchain
+llama-index-llms-openai
+llama-index-readers-file
+langchain-core
+langchain-openai
+pydantic
+pypdf
+
+
+openssl req -x509 -newkey rsa:4096 -nodes -out certificate.pem -keyout privatekey.pem -days 3650
+
+
+privatekey.pem ve certificate.pem /home/admin/project klasoru icinde
+
+/home/admin/project klasoru icinde:
+privatekey.pem
+certificate.pem
+requirements.txt
+chatapi.py
+.env
+DEVASC.pdf
+NPDESI.pdf
+SPCORE1.pdf
+SPCORE2.pdf
+SPROUTE1.pdf
+SPROUTE2.pdf
+ve Dockerfile var
+
+cat > Dockerfile
+
+FROM python:3.12.9
+WORKDIR /project
+COPY . /project
+RUN python3 -m pip install --upgrade pip
+RUN pip install --no-cache-dir -r requirements.txt
+EXPOSE 8443
+CMD ["python3.12", "chatapi.py"]
+
+
+docker build -t app .
+
+cd ..
+
+cat > docker-compose.yml
+
+version: '2.2'
+
+networks:
+  appnet:
+    name: appnet
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/24
+          gateway: 172.20.0.1
+
+services:
+  app1:
+    image: app
+    container_name: app1
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.110
+    working_dir: /project
+    volumes:
+      - /home/admin/project:/project
+      - /home/admin/logs1:/logs
+    restart: always
+
+  app2:
+    image: app
+    container_name: app2
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.111
+    working_dir: /project
+    volumes:
+      - /home/admin/project:/project
+      - /home/admin/logs2:/logs
+    restart: always
+
+  app3:
+    image: app
+    container_name: app3
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.112
+    working_dir: /project
+    volumes:
+      - /home/admin/project:/project
+      - /home/admin/logs3:/logs
+    restart: always
+
+  app4:
+    image: app
+    container_name: app4
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.113
+    working_dir: /project
+    volumes:
+      - /home/admin/project:/project
+      - /home/admin/logs4:/logs
+    restart: always
+
+  qdrant:
+    image: qdrant/qdrant
+    container_name: qdrant
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.201
+    volumes:
+      - qdrant_storage:/qdrant/storage
+    restart: always
+
+  chatapi-nginx-lb:
+    image: nginx
+    container_name: chatapi-nginx-lb
+    networks:
+      appnet:
+        ipv4_address: 172.20.0.202
+    ports:
+      - "8443:8443"
+    volumes:
+      - /home/admin/lb/nginx.conf:/etc/nginx/nginx.conf:ro
+      - /home/admin/nginx-ssl:/etc/nginx/ssl:ro
+    restart: always
+
+volumes:
+  qdrant_storage:
+
+
+docker compose up -d --build
+
+
+
+Logları Görüntüleme:
+
+log.py
+
+python3 log.py
+
+
+docker logs app1
+docker logs app2
+docker logs app3
+docker logs app4
+
+docker compose down
